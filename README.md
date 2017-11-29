@@ -1,8 +1,12 @@
 # nescode
 
-Command-line and web-based Game Genie decoder/encoder for Nintendo Entertainment System (npmjs module)
+Command-line and web-based Game Genie decoder/encoder for Nintendo Entertainment System (npmjs module),
+using [nes-game-genie](https://github.com/satoshinm/nes-game-genie) and
+[famicom-pro-action-rocky](https://github.com/satoshinm/famicom-pro-action-rocky) modules.
 
-**[Web-based example](https://satoshinm.github.io/nescode/)**
+### Web-based interface
+
+**[Web-based interface](https://satoshinm.github.io/nescode/)**
 
 ### Command-line interface (cli.js)
 
