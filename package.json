@@ -1,11 +1,11 @@
 {
-  "name": "nes-game-genie-example",
+  "name": "nescode",
   "version": "0.0.1",
   "description": "Example of using Game Genie decoder/encoder for Nintendo Entertainment System",
   "main": "web.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/satoshinm/nes-game-genie.git"
+    "url": "git+https://github.com/satoshinm/nescode.git"
   },
   "scripts": {
     "webpack": "webpack web.js bundle.js"
@@ -21,9 +21,9 @@
   "author": "Satoshi N. M.",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/satoshinm/nes-game-genie/issues"
+    "url": "https://github.com/satoshinm/nescode/issues"
   },
-  "homepage": "https://github.com/satoshinm/nes-game-genie#readme",
+  "homepage": "https://github.com/satoshinm/nescode#readme",
   "devDependencies": {
     "webpack": "^3.8.1"
   },
