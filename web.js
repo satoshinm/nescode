@@ -1,6 +1,6 @@
 'use strict';
 
-const { encode, decode, encodeHex, decodeHex } = require('../');
+const { encode, decode, encodeHex, decodeHex } = require('nes-game-genie');
 
 const textarea = document.createElement('textarea');
 
