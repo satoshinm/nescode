@@ -1,6 +1,6 @@
 {
   "name": "nescode",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Web-based and CLI encoder/decoder for NES Game Genie and Pro Action Rocky",
   "main": "web.js",
   "repository": {
