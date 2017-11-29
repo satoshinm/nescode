@@ -1,7 +1,7 @@
 {
   "name": "nescode",
   "version": "0.0.1",
-  "description": "Example of using Game Genie decoder/encoder for Nintendo Entertainment System",
+  "description": "Web-based and CLI encoder/decoder for NES Game Genie and Pro Action Rocky",
   "main": "web.js",
   "repository": {
     "type": "git",
