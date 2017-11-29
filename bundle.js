@@ -70,7 +70,8 @@
 "use strict";
 
 
-const { encode, decode, encodeHex, decodeHex } = __webpack_require__(1);
+const { encodeGG, decodeGG, encodeRaw, decodeRaw, isRawCode, isGGCode } = __webpack_require__(1);
+const { encodeRocky, decodeRocky, isRockyCode } = __webpack_require__(2);
 
 const textarea = document.createElement('textarea');
 
@@ -84,23 +85,49 @@ const output = document.createElement('p');
 function update() {
   output.innerHTML = '';
 
+  const table = document.createElement('table');
+  const headerRow = document.createElement('tr');
+
+  for (const header of ['Input', 'Raw', 'Rocky', 'Game Genie']) {
+    const th = document.createElement('th');
+    th.textContent = header;
+    headerRow.appendChild(th);
+  }
+  table.appendChild(headerRow);
+
   for (let input of textarea.value.split('\n')) {
-    const decoded = decode(input);
+    let decoded;
 
-    let outputLine;
-
-    if (decoded) {
-      const gg = encode(decoded.address, decoded.value, decoded.key, decoded.wantskey);
-      const hex = encodeHex(decoded.address, decoded.value, decoded.key, decoded.wantskey);
-
-      outputLine = `${input} = ${gg} ${hex}`;
-    } else {
-      outputLine = `${input} invalid`;
+    if (isRawCode(input)) {
+      decoded = decodeRaw(input);
+    } else if (isGGCode(input)) {
+      decoded = decodeGG(input);
+    } else if (isRockyCode(input)) {
+      decoded = decodeRocky(input);
     }
 
-    output.appendChild(document.createTextNode(outputLine));
-    output.appendChild(document.createElement('br'));
+    let columns;
+
+    if (decoded) {
+      const gg = encodeGG(decoded.address, decoded.value, decoded.key, decoded.wantskey);
+      const raw = encodeRaw(decoded.address, decoded.value, decoded.key, decoded.wantskey);
+      const rocky = encodeRocky(decoded.address, decoded.value, decoded.key);
+
+      columns = [input, raw, rocky, gg];
+    } else {
+      columns = [input, 'invalid', '', ''];
+    }
+
+    const row = document.createElement('tr');
+    for (const data of columns) {
+      const td = document.createElement('td');
+      td.textContent = data;
+      row.appendChild(td);
+    }
+    table.appendChild(row);
   }
+
+  output.appendChild(table);
 }
 
 document.body.addEventListener('keyup', update);
@@ -130,9 +157,16 @@ function toLetter(digit) {
   return LETTER_VALUES.substr(digit, 1);
 }
 
-function decode(code) {
-  if (code.indexOf(':') !== -1) return decodeHex(code);
+function isRawCode(code) {
+  return !!code.match(/^([0-9a-fA-F]+)(\?[0-9a-fA-F]*)?:([0-9a-fA-F]+)$/) ||
+    !!code.match(/^([0-9a-fA-F]+):([0-9a-fA-F]+)(\?[0-9a-fA-F]*)?$/);
+}
 
+function isGGCode(code) {
+  return !!code.match(/^[APZLGITYEOXUKSVN]{6}([APZLGITYEOXUKSVN]{2})?$/i);
+}
+
+function decodeGG(code) {
   const digits = code.toUpperCase().split('').map(toDigit);
 
   let value = ((digits[0] & 8) << 4) + ((digits[1] & 7) << 4) + (digits[0] & 7);
@@ -152,7 +186,7 @@ function decode(code) {
   return { value, address, wantskey, key };
 }
 
-function encode(address, value, key, wantskey) {
+function encodeGG(address, value, key, wantskey) {
   let digits = Array(6);
 
   digits[0] = (value & 7) + ((value >> 4) & 8);
@@ -182,7 +216,7 @@ function toHex(n, width) {
   return '0000'.substring(0, width - s.length) + s;
 }
 
-function encodeHex(address, value, key, wantskey) {
+function encodeRaw(address, value, key, wantskey) {
   let s = toHex(address, 4);
 
   if (key !== undefined || wantskey) {
@@ -198,7 +232,7 @@ function encodeHex(address, value, key, wantskey) {
   return s;
 }
 
-function decodeHex(s) {
+function decodeRaw(s) {
   // Conventional address?key:value
   let match = s.match(/^([0-9a-fA-F]+)(\?[0-9a-fA-F]*)?:([0-9a-fA-F]+)$/);
   if (match) {
@@ -224,8 +258,93 @@ function decodeHex(s) {
   return null;
 }
 
-module.exports = { encode, decode, encodeHex, decodeHex };
+module.exports = { encodeGG, decodeGG, encodeRaw, decodeRaw, isRawCode, isGGCode };
 
+
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+// Snippets based on http://www.chrismcovell.com/CheatConverter.html - credit:
+// "You may use snippits of this code in any program you want, if it is the game genie or pro action rockey decode or encode. Include this file with the program or put a thanks to Blue Hawk and this script title.
+// Coded by Blue Hawk."
+
+// Bit descrambling arrays
+const rocky_shifts = [
+	3,13,14,1,6,9,5,0,12,7,2,8,10,11,4,	// addr
+	19,21,23,22,20,17,16,18,		// compare
+	29,31,24,26,25,30,27,28			// replace
+];
+
+
+const rocky_key = 0x7e5ee93a;
+const rocky_xor = 0x5c184b91;
+
+function decodeRocky(s) {
+  let encoded = parseInt(s, 16);
+  encoded >>= 1;
+  let key = rocky_key;
+  let decoded = 0;
+  let i = 31;
+  while (i--) {
+    if ((key ^ encoded) & 0x40000000) {
+      decoded |= 1 << rocky_shifts[i];
+      key ^= rocky_xor;
+    }
+
+    encoded <<= 1;
+    key <<= 1;
+  }
+
+  const address = (decoded & 0x7fff);
+  const compare = (decoded >> 16) & 0xff;
+  const value   = (decoded >> 24) & 0xff;
+
+  return { address, key: compare, value };
+}
+
+function toHex(n, width) {
+  const s = n.toString(16);
+  return '00000000'.substring(0, width - s.length) + s;
+}
+
+function encodeRocky(address, value, compare)
+{
+  if (compare === undefined || compare === null) return null;
+
+  let decoded = address & 0x7fff;
+  decoded |= compare << 16;
+  decoded |= value << 24;
+
+  let key = rocky_key;
+  let encoded = new Uint32Array(1);
+  let i = 31;
+  while (i--) {
+    const bit = decoded >> rocky_shifts[i];
+
+    if (((key >> 30) ^ bit) & 1) {
+      encoded[0] |= 2 << i;
+    }
+
+    if (bit & 1) {
+      key ^= rocky_xor;
+    }
+
+    key <<= 1;
+  }
+
+  return toHex(encoded[0], 8).toUpperCase();
+}
+
+function isRockyCode(code) {
+  return !!code.match(/^[0-9A-F]{8}$/);
+}
+
+module.exports = { decodeRocky, encodeRocky, isRockyCode };
 
 
 /***/ })
