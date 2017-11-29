@@ -1,6 +1,7 @@
 'use strict';
 
-const { encode, decode, encodeHex, decodeHex } = require('nes-game-genie');
+const { encodeGG, decodeGG, encodeRaw, decodeRaw, isRawCode, isGGCode } = require('nes-game-genie');
+const { encodeRocky, decodeRocky, isRockyCode } = require('famicom-pro-action-rocky');
 
 const textarea = document.createElement('textarea');
 
@@ -14,23 +15,49 @@ const output = document.createElement('p');
 function update() {
   output.innerHTML = '';
 
+  const table = document.createElement('table');
+  const headerRow = document.createElement('tr');
+
+  for (const header of ['Input', 'Raw', 'Rocky', 'Game Genie']) {
+    const th = document.createElement('th');
+    th.textContent = header;
+    headerRow.appendChild(th);
+  }
+  table.appendChild(headerRow);
+
   for (let input of textarea.value.split('\n')) {
-    const decoded = decode(input);
+    let decoded;
 
-    let outputLine;
-
-    if (decoded) {
-      const gg = encode(decoded.address, decoded.value, decoded.key, decoded.wantskey);
-      const hex = encodeHex(decoded.address, decoded.value, decoded.key, decoded.wantskey);
-
-      outputLine = `${input} = ${gg} ${hex}`;
-    } else {
-      outputLine = `${input} invalid`;
+    if (isRawCode(input)) {
+      decoded = decodeRaw(input);
+    } else if (isGGCode(input)) {
+      decoded = decodeGG(input);
+    } else if (isRockyCode(input)) {
+      decoded = decodeRocky(input);
     }
 
-    output.appendChild(document.createTextNode(outputLine));
-    output.appendChild(document.createElement('br'));
+    let columns;
+
+    if (decoded) {
+      const gg = encodeGG(decoded.address, decoded.value, decoded.key, decoded.wantskey);
+      const raw = encodeRaw(decoded.address, decoded.value, decoded.key, decoded.wantskey);
+      const rocky = encodeRocky(decoded.address, decoded.value, decoded.key);
+
+      columns = [input, raw, rocky, gg];
+    } else {
+      columns = [input, 'invalid', '', ''];
+    }
+
+    const row = document.createElement('tr');
+    for (const data of columns) {
+      const td = document.createElement('td');
+      td.textContent = data;
+      row.appendChild(td);
+    }
+    table.appendChild(row);
   }
+
+  output.appendChild(table);
 }
 
 document.body.addEventListener('keyup', update);
