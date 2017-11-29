@@ -10,6 +10,9 @@
   "scripts": {
     "webpack": "webpack web.js bundle.js"
   },
+  "bin": {
+      "nescode": "./bin/nescode"
+  },
   "keywords": [
     "nes",
     "gg",
