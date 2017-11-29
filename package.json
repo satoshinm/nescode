@@ -31,7 +31,7 @@
     "webpack": "^3.8.1"
   },
   "dependencies": {
-    "famicom-pro-action-rocky": "*",
-    "nes-game-genie": "*"
+    "famicom-pro-action-rocky": "^2.0.0",
+    "nes-game-genie": "^2.0.0"
   }
 }
